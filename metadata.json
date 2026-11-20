@@ -1,0 +1,6 @@
+{
+  "name": "AeroShield — Urban Air Quality Assistant",
+  "description": "GenAI-powered urban air quality assistant helping families, communities, and workplaces navigate severe winter smog with low-emission routines, indoor air hacks, and quantified health impact.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
