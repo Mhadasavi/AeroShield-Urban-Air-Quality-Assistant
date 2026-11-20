@@ -71,17 +71,18 @@ describe('Tier 2 — Security Sanitization & iFrame-Compatible Headers', () => {
     assert.equal(clampNumber('invalid', 0, 100, 42), 42);
   });
 
-  it('mounts required security headers and removes X-Frame-Options for preview iframes', () => {
+  it('mounts hardened security headers including X-Frame-Options SAMEORIGIN and strict CSP', () => {
     const { res, headers } = createMockRes();
     let nextCalled = false;
     securityHeadersMiddleware({} as Request, res, () => {
       nextCalled = true;
     });
     assert.equal(nextCalled, true);
-    assert.equal(headers['x-frame-options'], undefined);
+    assert.equal(headers['x-frame-options'], 'SAMEORIGIN');
     assert.equal(headers['x-content-type-options'], 'nosniff');
     assert.equal(headers['referrer-policy'], 'strict-origin-when-cross-origin');
-    assert.ok(headers['content-security-policy']?.includes('frame-ancestors *'));
+    assert.ok(headers['content-security-policy']?.includes("frame-ancestors 'self'"));
+    assert.ok(headers['content-security-policy']?.includes("object-src 'none'"));
   });
 
   it('sets no-store cache headers on /api routes', () => {

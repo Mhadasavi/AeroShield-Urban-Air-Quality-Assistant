@@ -26,14 +26,15 @@ describe('Tier 4 — Express API Routes, Headers & Offline Fallback', () => {
     await new Promise<void>((resolve) => server.close(() => resolve()));
   });
 
-  it('returns healthy status with iframe-safe security headers and no-store cache', async () => {
+  it('returns healthy status with hardened security, rate-limit, and no-store cache headers', async () => {
     const res = await fetch(`${baseUrl}/api/health`);
     assert.equal(res.status, 200);
-    assert.equal(res.headers.get('x-frame-options'), null);
+    assert.equal(res.headers.get('x-frame-options'), 'SAMEORIGIN');
     assert.equal(res.headers.get('x-content-type-options'), 'nosniff');
     assert.equal(res.headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
-    assert.ok(res.headers.get('content-security-policy')?.includes('frame-ancestors *'));
+    assert.ok(res.headers.get('content-security-policy')?.includes("frame-ancestors 'self'"));
     assert.ok(res.headers.get('cache-control')?.includes('no-store'));
+    assert.ok(res.headers.get('ratelimit-limit'));
   });
 
   it('serves all 3 pre-configured domain verticals', async () => {

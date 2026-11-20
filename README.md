@@ -28,9 +28,10 @@
 +------------------------------------+------------------------------------+
                                      | REST / JSON (Zero client secrets)
 +------------------------------------v------------------------------------+
-| API & SECURITY MIDDLEWARE LAYER (Express 4 + Compression)               |
-|  - compression() Gzip | CSP (frame-ancestors *) | nosniff | no-store    |
-|  - Payload 3,000-char guard & XSS <script> sanitizer                    |
+| API & SECURITY MIDDLEWARE LAYER (Express 4 + Compression + Rate Limit)  |
+|  - compression() Gzip | express-rate-limit | 10kb JSON payload limit    |
+|  - X-Frame-Options: SAMEORIGIN | nosniff | CSP frame-ancestors 'self'   |
+|  - Payload 3,000-char guard & XSS <script> sanitizer | no-store /api    |
 |  - Controllers: server/controllers/apiController.ts                     |
 +------------------------------------+------------------------------------+
                                      |
@@ -63,8 +64,8 @@
 
 ## Automated Test Suite Breakdown (`npm test`)
 
-Runs via the native Node.js test runner (`tsx --test tests/**/*.test.ts`) in under 1.5 seconds via `tests/aeroshield.test.ts`:
+Runs via the native Node.js test runner (`tsx --test tests/*.test.ts`) in under 1.5 seconds via `tests/aeroshield.test.ts`:
 - **Tier 1 (`tests/tiers/tier1.math.ts`):** EPA PM2.5-to-AQI breakpoints, band classification, sensitivity exposure math, CADR clearance decay, and multiplicative PM2.5 savings invariants.
-- **Tier 2 (`tests/tiers/tier2.security.ts`):** XSS `<script>`/markup stripping, 3,000-character payload limits, iframe-safe security headers (`frame-ancestors *`, no `X-Frame-Options`), and `no-store` API headers.
+- **Tier 2 (`tests/tiers/tier2.security.ts`):** XSS `<script>`/markup stripping, 3,000-character payload limits, hardened security headers (`X-Frame-Options: SAMEORIGIN`, `frame-ancestors 'self'`, `nosniff`, `Referrer-Policy`), and `no-store` API headers.
 - **Tier 3 (`tests/tiers/tier3.state.ts`):** `MemoryStorageAdapter` repository isolation, CRUD lifecycle edge cases, and centralized `appReducer` state transitions.
-- **Tier 4 (`tests/tiers/tier4.api.ts`):** Live Express server HTTP integration tests for `/api/health`, `/api/verticals`, `/api/resources` CRUD, `/api/advisor/plan` offline fallback, and HTTP 400/404 validation.
+- **Tier 4 (`tests/tiers/tier4.api.ts`):** Live Express server HTTP integration tests for `/api/health`, `/api/verticals`, `/api/resources` CRUD, `/api/advisor/plan` offline fallback, rate-limit headers, and HTTP 400/404 validation.

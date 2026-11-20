@@ -161,6 +161,12 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#0b1326] text-[#dae2fd]">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-[#059669] focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:outline-none focus:ring-2 focus:ring-[#68dba9]"
+      >
+        Skip to content
+      </a>
       <TopNav onOpenCreate={() => dispatch({ type: 'OPEN_CREATE_MODAL' })} />
 
       <main id="main-content" className="mx-auto max-w-7xl space-y-10 px-4 py-8 sm:px-6 lg:px-8">

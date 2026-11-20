@@ -1,5 +1,6 @@
 import compression from 'compression';
 import express, { type Express, type NextFunction, type Request, type Response } from 'express';
+import rateLimit from 'express-rate-limit';
 import path from 'path';
 import { createApiController } from './controllers/apiController.ts';
 import {
@@ -25,11 +26,20 @@ export function createApp(options: CreateAppOptions = {}): Express {
   const resourceService = new ResourceService(repository);
   const controller = createApiController(resourceService, options.apiKeyOverride);
 
+  const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 120,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many requests, please retry shortly.' },
+  });
+
   app.use(compression());
   app.use(securityHeadersMiddleware);
-  app.use(express.json({ limit: '16kb' }));
+  app.use(express.json({ limit: '10kb' }));
 
   const apiRouter = express.Router();
+  apiRouter.use(apiLimiter);
   apiRouter.use(apiNoStoreMiddleware);
   apiRouter.use(payloadLimitMiddleware);
 

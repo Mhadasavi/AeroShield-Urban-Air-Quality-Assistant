@@ -1,21 +1,23 @@
 import type { NextFunction, Request, Response } from 'express';
 import { MAX_PAYLOAD_CHARS, measurePayloadSize } from '../utils/sanitize.ts';
 
-const CSP_POLICY = [
+export const HARDENED_CSP_POLICY = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com data:",
   "img-src 'self' data: https:",
   "connect-src 'self'",
-  'frame-ancestors *',
+  "object-src 'none'",
+  "base-uri 'self'",
+  "frame-ancestors 'self'",
 ].join('; ');
 
 export function securityHeadersMiddleware(_req: Request, res: Response, next: NextFunction): void {
-  res.removeHeader('X-Frame-Options');
   res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  res.setHeader('Content-Security-Policy', CSP_POLICY);
+  res.setHeader('Content-Security-Policy', HARDENED_CSP_POLICY);
   next();
 }
 

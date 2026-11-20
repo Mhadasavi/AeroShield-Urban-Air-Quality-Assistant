@@ -41,6 +41,18 @@ export function ResourceModal({
 
   useEffect(() => {
     if (!open) return;
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleEscapeKey);
+    return () => window.removeEventListener('keydown', handleEscapeKey);
+  }, [open, onClose]);
+
+  useEffect(() => {
+    if (!open) return;
     setValues(
       initial
         ? {

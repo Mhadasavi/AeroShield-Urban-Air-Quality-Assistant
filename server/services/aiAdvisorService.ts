@@ -1,4 +1,3 @@
-import { GoogleGenAI, Type } from '@google/genai';
 import type {
   AdvisorPlanResponse,
   AdvisorRecommendation,
@@ -10,31 +9,6 @@ import { clampNumber, sanitizeText } from '../utils/sanitize.ts';
 import { buildHeuristicAdvisorPlan } from './heuristicFallback.ts';
 
 const GEMINI_MODEL = 'gemini-4-hydrogen';
-
-const RESPONSE_SCHEMA = {
-  type: Type.OBJECT,
-  properties: {
-    executiveBrief: { type: Type.STRING },
-    riskSummary: { type: Type.STRING },
-    recommendations: {
-      type: Type.ARRAY,
-      items: {
-        type: Type.OBJECT,
-        properties: {
-          title: { type: Type.STRING },
-          category: { type: Type.STRING },
-          priority: { type: Type.STRING },
-          timeWindow: { type: Type.STRING },
-          actionSteps: { type: Type.STRING },
-          directImpact: { type: Type.STRING },
-          pm25ReductionPct: { type: Type.NUMBER },
-          co2SavedKgPerMonth: { type: Type.NUMBER },
-          costEstimate: { type: Type.STRING },
-        },
-      },
-    },
-  },
-};
 
 function normalizeCategory(raw: unknown): ResourceCategory {
   if (raw === 'routine' || raw === 'indoor-hack' || raw === 'sustainable-alt') return raw;
@@ -48,7 +22,9 @@ function normalizePriority(raw: unknown): ResourcePriority {
 
 function normalizeRecommendation(raw: Record<string, unknown>): AdvisorRecommendation {
   return {
-    title: sanitizeText(String(raw.title ?? 'Air Quality Protocol'), 'title', 110, false) || 'Air Quality Protocol',
+    title:
+      sanitizeText(String(raw.title ?? 'Air Quality Protocol'), 'title', 110, false) ||
+      'Air Quality Protocol',
     category: normalizeCategory(raw.category),
     priority: normalizePriority(raw.priority),
     timeWindow: sanitizeText(String(raw.timeWindow ?? 'Daily'), 'timeWindow', 48, false) || 'Daily',
@@ -72,27 +48,53 @@ export async function generateAdvisorPlan(
     );
   }
 
-  const ai = new GoogleGenAI({
-    apiKey,
-    httpOptions: {
-      headers: {
-        'User-Agent': 'aistudio-build',
-      },
-    },
-  });
-
-  const prompt = [
-    `Create a practical, scientifically grounded winter smog defense plan for:`,
-    `- Domain Vertical: ${req.verticalId}`,
-    `- Location: ${req.city} (Current AQI: ${req.aqi}, PM2.5: ${req.pm25} µg/m³)`,
-    `- Lifestyle & Profile: ${req.lifestyle}`,
-    `- Additional Constraints: ${req.householdNotes || 'Standard winter heating & commute constraints'}`,
-    `- Requested Focus: ${req.focusArea}`,
-    `Return exactly 3 high-impact recommendations covering low-emission routines ("routine"), indoor air quality hacks ("indoor-hack"), and sustainable alternatives ("sustainable-alt").`,
-    `Explain the exact direct health and emission impact of each choice clearly.`,
-  ].join('\n');
-
   try {
+    const { GoogleGenAI, Type } = await import('@google/genai');
+    const ai = new GoogleGenAI({
+      apiKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        },
+      },
+    });
+
+    const responseSchema = {
+      type: Type.OBJECT,
+      properties: {
+        executiveBrief: { type: Type.STRING },
+        riskSummary: { type: Type.STRING },
+        recommendations: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              title: { type: Type.STRING },
+              category: { type: Type.STRING },
+              priority: { type: Type.STRING },
+              timeWindow: { type: Type.STRING },
+              actionSteps: { type: Type.STRING },
+              directImpact: { type: Type.STRING },
+              pm25ReductionPct: { type: Type.NUMBER },
+              co2SavedKgPerMonth: { type: Type.NUMBER },
+              costEstimate: { type: Type.STRING },
+            },
+          },
+        },
+      },
+    };
+
+    const prompt = [
+      'Create a practical, scientifically grounded winter smog defense plan for:',
+      `- Domain Vertical: ${req.verticalId}`,
+      `- Location: ${req.city} (Current AQI: ${req.aqi}, PM2.5: ${req.pm25} µg/m³)`,
+      `- Lifestyle & Profile: ${req.lifestyle}`,
+      `- Additional Constraints: ${req.householdNotes || 'Standard winter heating & commute constraints'}`,
+      `- Requested Focus: ${req.focusArea}`,
+      'Return exactly 3 high-impact recommendations covering low-emission routines ("routine"), indoor air quality hacks ("indoor-hack"), and sustainable alternatives ("sustainable-alt").',
+      'Explain the exact direct health and emission impact of each choice clearly.',
+    ].join('\n');
+
     const response = await ai.models.generateContent({
       model: GEMINI_MODEL,
       contents: prompt,
@@ -100,7 +102,7 @@ export async function generateAdvisorPlan(
         systemInstruction:
           'You are an urban air quality scientist and environmental health advisor. Output concise, accurate JSON with realistic PM2.5 reduction percentages (10-65%) and monthly CO2e savings in kg. Never include markdown code fences.',
         responseMimeType: 'application/json',
-        responseSchema: RESPONSE_SCHEMA,
+        responseSchema,
       },
     });
 
@@ -115,7 +117,10 @@ export async function generateAdvisorPlan(
       : [];
 
     if (items.length === 0) {
-      return buildHeuristicAdvisorPlan(req, 'Model returned an empty schedule; using deterministic fallback.');
+      return buildHeuristicAdvisorPlan(
+        req,
+        'Model returned an empty schedule; using deterministic fallback.'
+      );
     }
 
     let remaining = 1;
@@ -129,7 +134,9 @@ export async function generateAdvisorPlan(
       mode: 'ai',
       model: GEMINI_MODEL,
       generatedAt: new Date().toISOString(),
-      executiveBrief: sanitizeText(parsed.executiveBrief ?? '', 'executiveBrief', 260, false) || `Tailored smog plan for ${req.city}`,
+      executiveBrief:
+        sanitizeText(parsed.executiveBrief ?? '', 'executiveBrief', 260, false) ||
+        `Tailored smog plan for ${req.city}`,
       riskSummary: sanitizeText(parsed.riskSummary ?? '', 'riskSummary', 340, false),
       recommendations: items,
       projectedPm25DropPct: Math.min(86, Math.round((1 - remaining) * 100)),
