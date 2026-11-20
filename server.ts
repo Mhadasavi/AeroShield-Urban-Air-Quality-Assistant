@@ -18,7 +18,7 @@ const CSP_HEADER = [
   "connect-src 'self'",
   "object-src 'none'",
   "base-uri 'self'",
-  "frame-ancestors 'self'",
+  'frame-ancestors *',
 ].join('; ');
 
 async function bootstrap(): Promise<void> {
@@ -36,8 +36,8 @@ async function bootstrap(): Promise<void> {
     })
   );
   app.use((_req, res, next) => {
+    res.removeHeader('X-Frame-Options');
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
     res.setHeader('Content-Security-Policy', CSP_HEADER);
     next();
