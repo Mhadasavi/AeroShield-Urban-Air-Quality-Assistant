@@ -17,6 +17,7 @@ export function securityHeadersMiddleware(_req: Request, res: Response, next: Ne
   res.removeHeader('X-Frame-Options');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   res.setHeader('Content-Security-Policy', HARDENED_CSP_POLICY);
   next();
 }

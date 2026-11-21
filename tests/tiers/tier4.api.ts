@@ -70,6 +70,7 @@ describe('Tier 4 — Express API Controllers, Security Middleware & Offline Fall
     assert.equal(res.headers['x-frame-options'], undefined);
     assert.equal(res.headers['x-content-type-options'], 'nosniff');
     assert.equal(res.headers['referrer-policy'], 'strict-origin-when-cross-origin');
+    assert.equal(res.headers['permissions-policy'], 'camera=(), microphone=(), geolocation=()');
     assert.ok(res.headers['content-security-policy']?.includes('frame-ancestors *'));
     assert.ok(res.headers['cache-control']?.includes('no-store'));
     assert.equal((res.body as { status: string }).status, 'ok');

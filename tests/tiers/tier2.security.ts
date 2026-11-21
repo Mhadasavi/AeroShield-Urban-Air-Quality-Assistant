@@ -81,6 +81,7 @@ describe('Tier 2 — Security Sanitization & iFrame-Compatible Headers', () => {
     assert.equal(headers['x-frame-options'], undefined);
     assert.equal(headers['x-content-type-options'], 'nosniff');
     assert.equal(headers['referrer-policy'], 'strict-origin-when-cross-origin');
+    assert.equal(headers['permissions-policy'], 'camera=(), microphone=(), geolocation=()');
     assert.ok(headers['content-security-policy']?.includes('frame-ancestors *'));
     assert.ok(headers['content-security-policy']?.includes("object-src 'none'"));
   });

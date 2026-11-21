@@ -45,17 +45,28 @@ export function AtmosphereHero({
         </div>
 
         <div
-          role="group"
+          role="tablist"
           aria-label="Select deployment vertical"
           className="inline-flex flex-wrap items-center gap-1 rounded-xl border border-white/10 bg-[#131b2e] p-1"
         >
-          {verticals.map((v) => {
+          {verticals.map((v, idx) => {
             const active = v.id === activeVertical.id;
             return (
               <button
                 key={v.id}
+                id={`vertical-tab-${v.id}`}
                 type="button"
-                aria-pressed={active}
+                role="tab"
+                aria-selected={active}
+                aria-controls="vertical-telemetry-panel"
+                tabIndex={active ? 0 : -1}
+                onKeyDown={(e) => {
+                  if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+                  e.preventDefault();
+                  const delta = e.key === 'ArrowRight' ? 1 : -1;
+                  const next = verticals[(idx + delta + verticals.length) % verticals.length];
+                  onSelectVertical(next.id);
+                }}
                 onClick={() => onSelectVertical(v.id)}
                 className={`whitespace-nowrap shrink-0 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#68dba9] ${
                   active
@@ -70,7 +81,12 @@ export function AtmosphereHero({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 items-stretch gap-5 lg:grid-cols-12">
+      <div
+        id="vertical-telemetry-panel"
+        role="tabpanel"
+        aria-labelledby={`vertical-tab-${activeVertical.id}`}
+        className="grid grid-cols-1 items-stretch gap-5 lg:grid-cols-12"
+      >
         <div
           className={`glass-panel-alert flex flex-col justify-between rounded-2xl p-6 lg:col-span-7 ${glowClass}`}
         >

@@ -17,6 +17,11 @@ const PM25_BREAKPOINTS: Breakpoint[] = [
   { cLow: 350.5, cHigh: 500.4, iLow: 401, iHigh: 500 },
 ];
 
+/**
+ * Converts ambient PM2.5 (µg/m³) into US EPA AQI using linear breakpoint interpolation.
+ * Time Complexity: O(1) — scans fixed 7-entry EPA breakpoint table.
+ * Space Complexity: O(1)
+ */
 export function calculateAqiFromPm25(pm25Raw: number): number {
   const pm25 = Math.max(0, Math.min(500.4, Number.isFinite(pm25Raw) ? pm25Raw : 0));
   const truncated = Math.floor(pm25 * 10) / 10;
@@ -29,6 +34,10 @@ export function calculateAqiFromPm25(pm25Raw: number): number {
   return 500;
 }
 
+/**
+ * Classifies numeric AQI into its clinical US EPA band.
+ * Time Complexity: O(1) | Space Complexity: O(1)
+ */
 export function classifyAqiBand(aqi: number): AqiBand {
   if (aqi <= 50) return 'Good';
   if (aqi <= 100) return 'Moderate';
@@ -38,6 +47,10 @@ export function classifyAqiBand(aqi: number): AqiBand {
   return 'Hazardous';
 }
 
+/**
+ * Maps numeric AQI to its semantic visual tone.
+ * Time Complexity: O(1) | Space Complexity: O(1)
+ */
 export function getAqiSeverityTone(aqi: number): 'safe' | 'moderate' | 'hazard' {
   if (aqi <= 50) return 'safe';
   if (aqi <= 100) return 'moderate';
@@ -59,6 +72,11 @@ const MASK_FILTRATION_FACTOR: Record<ShieldMember['maskGrade'], number> = {
   P100: 0.05,
 };
 
+/**
+ * Estimates 24-hour respiratory exposure index weighted by outdoor time, mask grade,
+ * indoor filtration status, and physiological sensitivity.
+ * Time Complexity: O(1) | Space Complexity: O(1)
+ */
 export function calculateMemberExposureIndex(params: {
   ambientAqi: number;
   sensitivity: SensitivityLevel;
@@ -77,6 +95,10 @@ export function calculateMemberExposureIndex(params: {
   return Math.max(0, Math.min(500, Math.round(adjusted)));
 }
 
+/**
+ * Models exponential indoor PM2.5 clearance time (minutes) via ACH = CADR / Volume.
+ * Time Complexity: O(1) | Space Complexity: O(1)
+ */
 export function calculateIndoorClearanceMinutes(params: {
   roomVolumeM3: number;
   cadrM3h: number;
@@ -92,6 +114,11 @@ export function calculateIndoorClearanceMinutes(params: {
   return Math.max(1, Math.round(hours * 60));
 }
 
+/**
+ * Aggregates multiplicative PM2.5 reduction and additive CO2e savings across n protocols.
+ * Time Complexity: O(n) where n = resources.length
+ * Space Complexity: O(1) auxiliary space (single pass without intermediate copies)
+ */
 export function calculateAggregateImpact(resources: ActionResource[]): {
   activeCount: number;
   totalCount: number;
@@ -100,11 +127,13 @@ export function calculateAggregateImpact(resources: ActionResource[]): {
   annualCo2SavedKg: number;
   equivalentTrees: number;
 } {
-  const active = resources.filter((r) => r.completed);
+  let activeCount = 0;
   let remainingExposure = 1;
   let monthlyCo2 = 0;
 
-  for (const item of active) {
+  for (const item of resources) {
+    if (!item.completed) continue;
+    activeCount += 1;
     const pct = Math.max(0, Math.min(80, item.pm25ReductionPct)) / 100;
     remainingExposure *= 1 - pct;
     monthlyCo2 += Math.max(0, item.co2SavedKgPerMonth);
@@ -115,7 +144,7 @@ export function calculateAggregateImpact(resources: ActionResource[]): {
   const equivalentTrees = Number((annualCo2SavedKg / 21.77).toFixed(1));
 
   return {
-    activeCount: active.length,
+    activeCount,
     totalCount: resources.length,
     combinedPm25ReductionPct,
     monthlyCo2SavedKg: Math.round(monthlyCo2),

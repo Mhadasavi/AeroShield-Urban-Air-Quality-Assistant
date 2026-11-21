@@ -3,7 +3,7 @@
 ![Architecture](https://img.shields.io/badge/Architecture-Layered_Clean-059669?style=flat-square)
 ![Accessibility](https://img.shields.io/badge/WCAG_2.1-AA_Compliant-0D9488?style=flat-square)
 ![Security](https://img.shields.io/badge/Security-CSP_&_Sanitized-10B981?style=flat-square)
-![Tests](https://img.shields.io/badge/Tests-27_Passing_<1s-059669?style=flat-square)
+![Tests](https://img.shields.io/badge/Tests-28_Passing_<1s-059669?style=flat-square)
 
 **AeroShield** is a GenAI-powered Urban Air Quality Assistant designed to help families, schools, and urban workplaces navigate severe winter smog inversions. It pairs real-time respiratory exposure mathematics with Gemini-powered low-emission daily routines, indoor air quality hacks, and sustainable alternatives—explaining the direct PM2.5 and CO2e impact of every choice.
 
@@ -30,14 +30,15 @@
 +------------------------------------v------------------------------------+
 | API & SECURITY MIDDLEWARE LAYER (Express 4 + Compression + Rate Limit)  |
 |  - compression() Gzip | express-rate-limit | 10kb JSON payload limit    |
-|  - X-Frame-Options: SAMEORIGIN | nosniff | CSP frame-ancestors 'self'   |
+|  - CSP (frame-ancestors *, object-src 'none') | nosniff | no XFO iframe |
+|  - Permissions-Policy: camera=(), microphone=(), geolocation=()         |
 |  - Payload 3,000-char guard & XSS <script> sanitizer | no-store /api    |
 |  - Controllers: server/controllers/apiController.ts                     |
 +------------------------------------+------------------------------------+
                                      |
 +------------------------------------v------------------------------------+
 | BUSINESS LOGIC & AI SERVICES LAYER                                      |
-|  - shared/airMath.ts (EPA AQI, Exposure Index, CADR Decay, Impact Math) |
+|  - shared/airMath.ts (EPA AQI, Exposure Index, CADR Decay, O(n) Impact) |
 |  - server/services/aiAdvisorService.ts (@google/genai gemini-4-hydrogen)|
 |  - server/services/heuristicFallback.ts (Graceful Offline Fallback)     |
 |  - server/services/resourceService.ts (Validation & Sanitization)       |
@@ -64,8 +65,8 @@
 
 ## Automated Test Suite Breakdown (`npm test`)
 
-Runs via the native Node.js test runner (`tsx --test tests/*.test.ts`) in under 1.5 seconds via `tests/aeroshield.test.ts`:
+Runs 28 tests via `node tests/run.mjs` (`tests/aeroshield.test.ts`) in under 1 second:
 - **Tier 1 (`tests/tiers/tier1.math.ts`):** EPA PM2.5-to-AQI breakpoints, band classification, sensitivity exposure math, CADR clearance decay, and multiplicative PM2.5 savings invariants.
-- **Tier 2 (`tests/tiers/tier2.security.ts`):** XSS `<script>`/markup stripping, 3,000-character payload limits, hardened security headers (`X-Frame-Options: SAMEORIGIN`, `frame-ancestors 'self'`, `nosniff`, `Referrer-Policy`), and `no-store` API headers.
+- **Tier 2 (`tests/tiers/tier2.security.ts`):** XSS `<script>`/markup stripping, 3,000-character payload limits, iframe-compatible security headers (`frame-ancestors *`, `Permissions-Policy`, `nosniff`, `Referrer-Policy`, intentionally omitting `X-Frame-Options` for preview iframes), and `no-store` API headers.
 - **Tier 3 (`tests/tiers/tier3.state.ts`):** `MemoryStorageAdapter` repository isolation, CRUD lifecycle edge cases, and centralized `appReducer` state transitions.
-- **Tier 4 (`tests/tiers/tier4.api.ts`):** Live Express server HTTP integration tests for `/api/health`, `/api/verticals`, `/api/resources` CRUD, `/api/advisor/plan` offline fallback, rate-limit headers, and HTTP 400/404 validation.
+- **Tier 4 (`tests/tiers/tier4.api.ts`):** In-process Express API controller & security middleware integration tests for `/api/health`, `/api/verticals`, `/api/resources` CRUD, `/api/advisor/plan` offline fallback, and HTTP 400/404 validation.

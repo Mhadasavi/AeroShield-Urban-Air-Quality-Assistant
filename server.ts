@@ -39,6 +39,7 @@ async function bootstrap(): Promise<void> {
     res.removeHeader('X-Frame-Options');
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
     res.setHeader('Content-Security-Policy', CSP_HEADER);
     next();
   });
