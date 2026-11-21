@@ -14,7 +14,7 @@ export const HARDENED_CSP_POLICY = [
 ].join('; ');
 
 export function securityHeadersMiddleware(_req: Request, res: Response, next: NextFunction): void {
-  res.removeHeader('X-Frame-Options');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');

@@ -173,6 +173,7 @@ export function ActionPlanSection({
                       <input
                         id={checkboxId}
                         type="checkbox"
+                        aria-label={`Mark ${item.title} as active`}
                         checked={item.completed}
                         onChange={() => void onToggleComplete(item)}
                         className="h-5 w-5 cursor-pointer rounded border-white/30 bg-[#0b1326] accent-[#059669] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#68dba9]"

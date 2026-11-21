@@ -20,6 +20,7 @@ export interface CreateAppOptions {
 export function createApp(options: CreateAppOptions = {}): Express {
   const app = express();
   app.disable('x-powered-by');
+  app.set('trust proxy', 1);
 
   const storePath = path.resolve(process.cwd(), '.data', 'aeroshield-store.json');
   const repository = options.repository ?? new ResourceRepository(new FileStorageAdapter(storePath));
@@ -31,6 +32,15 @@ export function createApp(options: CreateAppOptions = {}): Express {
     max: 120,
     standardHeaders: true,
     legacyHeaders: false,
+    validate: false,
+    keyGenerator: (req) => {
+      const forwarded = req.headers.forwarded;
+      if (typeof forwarded === 'string') {
+        const match = forwarded.match(/for="?([^;,\s"]+)"?/i);
+        if (match?.[1]) return match[1];
+      }
+      return req.ip ?? req.socket.remoteAddress ?? 'unknown';
+    },
     message: { error: 'Too many requests, please retry shortly.' },
   });
 

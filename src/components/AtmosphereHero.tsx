@@ -33,13 +33,16 @@ export function AtmosphereHero({
         : 'shadow-[0_8px_32px_-4px_rgba(225,29,72,0.28)] border-[#e11d48]/45';
 
   return (
-    <section id="overview" className="space-y-6">
+    <section id="overview" aria-labelledby="overview-heading" className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-sm font-medium text-[#6bd8cb]">
             {activeVertical.regionLabel} · {activeVertical.seasonCondition}
           </p>
-          <h1 className="mt-1 max-w-2xl text-3xl font-extrabold tracking-tight text-[#dae2fd] sm:text-4xl [text-wrap:balance]">
+          <h1
+            id="overview-heading"
+            className="mt-1 max-w-2xl text-3xl font-extrabold tracking-tight text-[#dae2fd] sm:text-4xl [text-wrap:balance]"
+          >
             Urban Winter Smog Defense
           </h1>
         </div>

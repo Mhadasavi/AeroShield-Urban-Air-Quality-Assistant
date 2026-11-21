@@ -86,6 +86,7 @@ export function SmogShieldList({
                   </label>
                   <select
                     id={selectId}
+                    aria-label={`Respirator grade for ${member.name}`}
                     value={activeMask}
                     onChange={(e) =>
                       onChangeMask(member.id, e.target.value as ShieldMember['maskGrade'])

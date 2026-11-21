@@ -67,7 +67,7 @@ describe('Tier 4 — Express API Controllers, Security Middleware & Offline Fall
   it('returns healthy status with iframe-safe security and no-store cache headers', async () => {
     const res = await invokePipeline('GET', {}, controller.getHealth);
     assert.equal(res.statusCode, 200);
-    assert.equal(res.headers['x-frame-options'], undefined);
+    assert.equal(res.headers['x-frame-options'], 'SAMEORIGIN');
     assert.equal(res.headers['x-content-type-options'], 'nosniff');
     assert.equal(res.headers['referrer-policy'], 'strict-origin-when-cross-origin');
     assert.equal(res.headers['permissions-policy'], 'camera=(), microphone=(), geolocation=()');

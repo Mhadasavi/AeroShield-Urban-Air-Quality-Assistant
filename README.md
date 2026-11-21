@@ -30,10 +30,10 @@
 +------------------------------------v------------------------------------+
 | API & SECURITY MIDDLEWARE LAYER (Express 4 + Compression + Rate Limit)  |
 |  - compression() Gzip | express-rate-limit | 10kb JSON payload limit    |
-|  - CSP (frame-ancestors *, object-src 'none') | nosniff | no XFO iframe |
-|  - Permissions-Policy: camera=(), microphone=(), geolocation=()         |
-|  - Payload 3,000-char guard & XSS <script> sanitizer | no-store /api    |
-|  - Controllers: server/controllers/apiController.ts                     |
+|  - CSP (frame-ancestors *, object-src 'none') | X-Frame-Options: SAMEORIGIN |
+|  - Permissions-Policy: camera=(), microphone=(), geolocation=() | nosniff   |
+|  - Payload 3,000-char guard & XSS <script> sanitizer | no-store /api        |
+|  - Controllers: server/controllers/apiController.ts                         |
 +------------------------------------+------------------------------------+
                                      |
 +------------------------------------v------------------------------------+
@@ -67,6 +67,6 @@
 
 Runs 28 tests via `node tests/run.mjs` (`tests/aeroshield.test.ts`) in under 1 second:
 - **Tier 1 (`tests/tiers/tier1.math.ts`):** EPA PM2.5-to-AQI breakpoints, band classification, sensitivity exposure math, CADR clearance decay, and multiplicative PM2.5 savings invariants.
-- **Tier 2 (`tests/tiers/tier2.security.ts`):** XSS `<script>`/markup stripping, 3,000-character payload limits, iframe-compatible security headers (`frame-ancestors *`, `Permissions-Policy`, `nosniff`, `Referrer-Policy`, intentionally omitting `X-Frame-Options` for preview iframes), and `no-store` API headers.
+- **Tier 2 (`tests/tiers/tier2.security.ts`):** XSS `<script>`/markup stripping, 3,000-character payload limits, security headers (`X-Frame-Options: SAMEORIGIN` alongside CSP `frame-ancestors *`, `Permissions-Policy`, `nosniff`, `Referrer-Policy`), and `no-store` API headers.
 - **Tier 3 (`tests/tiers/tier3.state.ts`):** `MemoryStorageAdapter` repository isolation, CRUD lifecycle edge cases, and centralized `appReducer` state transitions.
 - **Tier 4 (`tests/tiers/tier4.api.ts`):** In-process Express API controller & security middleware integration tests for `/api/health`, `/api/verticals`, `/api/resources` CRUD, `/api/advisor/plan` offline fallback, and HTTP 400/404 validation.
